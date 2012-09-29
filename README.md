@@ -1,43 +1,30 @@
-``minima: noSQL + noHTML + noJS``
+minima: noSQL + noHTML + noJS
+=============================
 
-Sketch
-======
-Traditional web frameworks are comprised of an ORM layer over a DB, a templating engine (or 
-several ones), and some sort of an HTTP dispatcher. Take ``sqlalchemy`` with ``cherrypy`` and
-``cheeta`` templates and you're done -- so how come web frameworks are still so big and 
-complicated? 
+Traditional web frameworks comprise of an ORM layer over a DB, a templating engine and some 
+HTTP dispatcher and session management. In my view, the first two are relics of the past and
+we can (and should) do without them, and the third should be greatly improved. Luckily, modern
+minimalist frameworks like ``flask`` get us closer to that, but there's still way to go.
 
-``Minima`` aims to eliminate the dozens of existing technologies that traditional web frameworks
-stack onto each other: HTTP servers, HTML, templating languages, CSS, javascript, JSON, SQL 
-servers and what-not. ``Minima`` allows you to build fully functional, efficient, and good-looking
-sites, without ever having to see anything other than server-side python code. On the other hand,
-in order to provide this feat, you should be aware that ``minima`` restricts what you can do.
+The Vision: Snakes all the Way Down!
+------------------------------------
 
-The idea is simple:
+* Websites should be service-oriented, exposing APIs instead of generating HTML pages 
+  on the fly. JSON API calls everywhere, by default.
+* Templating is a stupid thing: it's basically very limited, cumbersome, and unsafe form of 
+  function application. A template takes parameters and generates HTML: it's a function!
+* An HTTP server is ultimately a degenerate form of Remote Procedure Call (RPC) - it dispatches
+  function names (URLs) to concrete functions, extracts parameters, and generally alleviates
+  your code from the mess that is HTTP.
+* HTML is too low-level for us to mess with; we ought to be talking at a much more semantic
+  level, that renders itself as HTML plus the required JavaScript.
+* JavaScript is a horrible language and we should strive to avoid any contact with it. We do this 
+  by putting as much of it as possible into the framework. 
+* ORM and SQL suck. A document-oriented database (e.g., *mongo*) would normally prove the better
+  choice (unless you need really complex queries): if you choose to work in a dynamic language,
+  why would you work with a static DB schema? 
 
-* Get rid of SQL: move to a key-value store such as ``mongo``. There's no reason for your
-  data store to be statically typed while your code is dynamically typed! The data-model changes
-  too frequently to be static, and most sites are not google or ebay -- they amount of traffic 
-  shouldn't be a problem.
-* Get rid of HTML: your code builds "documents", which define the structure of your data.
-  These documents are then rendered as HTML
-* get rid of templating engines: since you generate your documents in code, there's no reason
-  to use templates. You don't see HTML. Ever. Templating is just a restricted form of function 
-  composition, while general function composition gives you much more power.
-* Get rid of client-side scripting, in favor of server-side scripting and eliminate ``GETs`` 
-  and ``POSTs`` in favor of AJAX - apart from the initial ``GET`` of the page, 
-  all server interaction will be AJAXish (using ``jQuery.getJSON``). The server will generate 
-  JSON resources and the necessary javascript code to render them in-page. This code will be
-  part of the framework, not your site. "There should be one -- and preferably only one -- 
-  obvious way to do it."
-* Since you're building documents and not HTML "text", there's no different between a JSON 
-  resource and a web page -- they only use different renderers.
-* In the meantime, until a better solution is found, we'll stick with CSS: after all, you'll 
-  have to specify the background color and font size, so there's no reason to reinvent the wheel
-  here, at least at this moment.
-* Use a unified sessions/cookies library, as part of the framework. Your code won't need to handle
-  the context by itself.
-* Use a simple HTTP dispatcher built on top of ``WSGI``: let Apache take care of everything 
-  HTTP-related, and other than that, there's really no need for cherrypy or other python web 
-  servers.
-
+Web programming involves too many unrelated technologies that were stacked one on top of the other 
+over the years (HTTP, HTML, JavaScript/CoffeeScript, CSS/Sass, JSON, AJAX, SQL, templating, CGI, 
+...). The purpose of minima is to reduce that mess to pure Python, as far as we can go, given that 
+these technologies are here to stay.
