@@ -1,4 +1,4 @@
-from hypertext import UNESCAPED, EMBED, a, head, html, div, body, link, title, meta, small, img, h1
+from minima.hypertext import UNESCAPED, EMBED, a, head, html, div, body, link, title, meta, small, img, h1
 
 # Mocks {{
 from collections import namedtuple

@@ -1,3 +1,5 @@
 .project
 .pydevproject
 *.pyc
+_scraps/development-bundle
+_scraps/demos

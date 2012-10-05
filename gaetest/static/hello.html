@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <title>jQuery UI Example Page</title>
+        <link type="text/css" href="/css/smoothness/jquery-ui-1.8.23.custom.css" rel="stylesheet" />
+        <script type="text/javascript" src="/js/jquery-1.7.2.min.js"></script>
+        <script type="text/javascript" src="/js/jquery-ui-1.8.23.custom.min.js"></script>
+        <script type="text/javascript">
+            $(function(){
+
+                // Accordion
+                $("#accordion").accordion({ header: "h3" });
+
+                function jcall(url, data, func) {
+                    return $.post(url, JSON.stringify(data), func, 'json');
+                }
+                
+                //Autocomplete
+                jcall('/api', {foo:"bar"},
+                    function(data) {
+                        $("#autocomplete").autocomplete({
+                            source: data.data
+                        });
+                        $("#example").html("ready");
+                    }
+                );
+            
+                // Button
+                $("#button").button();
+                $("#radioset").buttonset();
+                
+                $("#button").button("click", function() {
+                    alert("hi");
+                    $("#accordion").accordion("activate", 2);
+                });
+                
+            });
+        </script>
+        <style type="text/css">
+            /*demo page css*/
+            body{ font: 62.5% "Trebuchet MS", sans-serif; margin: 50px;}
+            .demoHeaders { margin-top: 2em; }
+            #dialog_link {padding: .4em 1em .4em 20px;text-decoration: none;position: relative;}
+            #dialog_link span.ui-icon {margin: 0 5px 0 0;position: absolute;left: .2em;top: 50%;margin-top: -8px;}
+            ul#icons {margin: 0; padding: 0;}
+            ul#icons li {margin: 2px; position: relative; padding: 4px 0; cursor: pointer; float: left;  list-style: none;}
+            ul#icons span.ui-icon {float: left; margin: 0 4px;}
+        </style>
+    </head>
+    <body>
+    <h1>Foobar</h1>
+    <p style="font-size: 1.3em; line-height: 1.5; margin: 1em 0; width: 50%;">This page demonstrates the widgets you downloaded using the theme you selected in the download builder. We've included and linked to minified versions of <a href="../js/jquery-1.7.2.min.js">jQuery</a>, your personalized copy of <a href="../js/jquery-ui-1.8.23.custom.min.js">jQuery UI (js/jquery-ui-1.8.23.custom.min.js)</a>, and <a href="css/smoothness/jquery-ui-1.8.23.custom.css">css/smoothness/jquery-ui-1.8.23.custom.css</a> which imports the entire jQuery UI CSS Framework. You can choose to link a subset of the CSS Framework depending on your needs. </p>
+    <p style="font-size: 1.2em; line-height: 1.5; margin: 1em 0; width: 50%;">You've downloaded components and a theme that are compatible with jQuery 1.3+. Please make sure you are using jQuery 1.3+ in your production environment.</p>
+
+    <p style="font-weight: bold; margin: 2em 0 1em; font-size: 1.3em;">YOUR COMPONENTS:</p>
+
+        <!-- Accordion -->
+        <h2 class="demoHeaders">Accordion</h2>
+        <div id="accordion">
+            <div>
+                <h3><a href="#">First</a></h3>
+                <div>Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet.</div>
+            </div>
+            <div>
+                <h3><a href="#">Second</a></h3>
+                <div>Phasellus mattis tincidunt nibh.</div>
+            </div>
+            <div>
+                <h3><a href="#">Third</a></h3>
+                <div>Nam dui erat, auctor a, dignissim quis.</div>
+            </div>
+        </div>
+        
+        <div id="example">Kaki</div>
+
+        <!-- Autocomplete -->
+        <h2 class="demoHeaders">Autocomplete</h2>
+        <div>
+            <input id="autocomplete" style="z-index: 100; position: relative" title="type &quot;a&quot;" />
+        </div>
+
+        <!-- Button -->
+        <h2 class="demoHeaders">Button</h2>
+        <button id="button">A button element</button>
+        <form style="margin-top: 1em;">
+            <div id="radioset">
+                <input type="radio" id="radio1" name="radio" /><label for="radio1">Choice 1</label>
+                <input type="radio" id="radio2" name="radio" checked="checked" /><label for="radio2">Choice 2</label>
+                <input type="radio" id="radio3" name="radio" /><label for="radio3">Choice 3</label>
+            </div>
+        </form>
+
+
+
+    </body>
+</html>
+
+
