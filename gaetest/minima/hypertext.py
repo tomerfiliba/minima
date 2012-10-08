@@ -119,6 +119,7 @@ there's no need for templating languages, passing parameters back and forth, ext
 templates or including files. It's snakes all the way down!
 """
 import threading
+from contextlib import contextmanager
 
 
 __all__ = ["Element", "TEXT", "UNESCAPED", "ATTR", "EMBED", "THIS", "PARENT"]
@@ -230,6 +231,19 @@ def EMBED(element):
 def ATTR(**kwargs):
     """Sets the given keyword-arguments as attributes of the current HTML element"""
     THIS()(**kwargs)
+
+@contextmanager
+def clean_stack():
+    if not hasattr(_per_thread, "stack"):
+        yield
+        return
+    prev = _per_thread.stack
+    _per_thread.stack = []
+    try:
+        yield
+    finally:
+        _per_thread.stack = prev
+
 #===================================================================================================
 # </magic>
 #===================================================================================================
