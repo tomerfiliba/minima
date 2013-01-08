@@ -15,27 +15,27 @@ Creating HTML elements is easy and straightforward ::
 
 Invoking ``str`` (or via ``print``) on an HTML element renders it textually ::
 
-    >>> print x
+    >>> print(x)
     <h1 class="highlight">hello</h1>
 
 Alternatively, if you're not afraid of polluting your namespace ::
 
     >>> from hypertext import *
-    >>> print h1("hello", class_ = "highlight")
+    >>> print(h1("hello", class_ = "highlight"))
     <h1 class="highlight">hello</h1>
 
 And there's a shortcut for specifying the class (a la ``haml``) ::
 
-    >>> print h1.highlight("hello")
+    >>> print(h1.highlight("hello"))
     <h1 class="highlight">hello</h1>
 
 Which can be combined for specifying multiple classes... ::
 
-    >>> print h1.highlight.important("hello")
+    >>> print(h1.highlight.important("hello"))
     <h1 class="highlight important">hello</h1>
 
 Element can be nested ::
-    >>> print div.content(h1.highlight("hello"))
+    >>> print(div.content(h1.highlight("hello")))
     <div class="content"><h1 class="highlight">hello</h1></div>
 
 But also using ``with`` statement
@@ -44,7 +44,7 @@ But also using ``with`` statement
     ...     h1.highlight("hello")
     ...
     ,,,
-    >>> print root
+    >>> print(root)
     <div class="content"><h1 class="highlight">hello</h1></div>
 
 .. note::
@@ -57,7 +57,7 @@ The attributes and text of elements can be specified after their construction ::
     ...         ATTR(class_ = "highlight")
     ...         TEXT("hello")
     ...
-    >>> print root
+    >>> print(root)
     <div class="content"><h1 class="highlight">hello</h1></div>
 
 Text is HTML-escaped by default, but you can override it (if you trust its source) ::
@@ -67,7 +67,7 @@ Text is HTML-escaped by default, but you can override it (if you trust its sourc
     ...     TEXT("hello %s" % (dangerous,))
     ...     UNESCAPED("hello %s" % (dangerous,))
     ...
-    >>> print root
+    >>> print(root)
     <div class="content">
       hello &lt;script&gt;alert(&apos;oh no!&apos;);&lt;/script&gt;
       hello <script>alert('oh no!');</script>
@@ -91,7 +91,7 @@ Putting it all together::
     ...                     li(item)
     ...
     ,,,
-    >>> print doc
+    >>> print(doc)
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
       <head>
@@ -120,6 +120,7 @@ templates or including files. It's snakes all the way down!
 """
 import threading
 from contextlib import contextmanager
+import six
 
 
 __all__ = ["Element", "TEXT", "UNESCAPED", "ATTR", "EMBED", "THIS", "PARENT"]
@@ -142,16 +143,16 @@ def xml_escape(text):
 #===================================================================================================
 _per_thread = threading.local()
 
-class Element(object):
-    class __metaclass__(type):
-        __slots__ = ()
-        def __getattr__(cls, name):
-            return cls(class_ = name)
-        def __enter__(cls):
-            return cls().__enter__()
-        def __exit__(cls, t, v, tb):
-            _per_thread._stack[-1].__exit__(t, v, tb)
+class ElementMetaclass(type):
+    __slots__ = ()
+    def __getattr__(cls, name):
+        return cls(class_ = name)
+    def __enter__(cls):
+        return cls().__enter__()
+    def __exit__(cls, t, v, tb):
+        _per_thread._stack[-1].__exit__(t, v, tb)
 
+class Element(six.with_metaclass(ElementMetaclass)):
     __slots__ = ["_attrs", "_elems"]
     TAG = None
     INLINE = False
