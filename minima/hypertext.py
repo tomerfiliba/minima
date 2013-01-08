@@ -249,7 +249,7 @@ def clean_stack():
 #===================================================================================================
 
 def _render(elem, level, dont_indent = False):
-    indent = "  " * level
+    indent = "" if dont_indent else "  " * level
     if not isinstance(elem, Element):
         result = xml_escape(elem)
     else:
@@ -266,10 +266,7 @@ def _render(elem, level, dont_indent = False):
                 result = "<%s%s>\n%s\n%s</%s>" % (tag, attrs, elements, indent, tag)
         else:
             result = "<%s%s/>" % (tag, attrs)
-    if dont_indent:
-        return result
-    else:
-        return indent + result
+    return indent + result
 
 def render(root):
     """renders the given HTML element and prepends ``DOCTYPE`` if one exists"""
