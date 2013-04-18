@@ -1,0 +1,3 @@
+[submodule "srcgen"]
+	path = srcgen
+	url = git://github.com/tomerfiliba/srcgen.git
