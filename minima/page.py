@@ -1,4 +1,5 @@
-import srcgen.hypertext as h
+from . import hypertext
+import threading
 
 
 class ExtensionPoint(object):
@@ -10,7 +11,7 @@ class ExtensionPoint(object):
     def __enter__(self):
         if hasattr(self, "_rec"):
             raise TypeError("%r cannot be recursively embedded" % (self,))
-        self._rec = h.recording()
+        self._rec = hypertext.recording()
         self._roots = self._rec.__enter__()
         return self
     def __exit__(self, t, v, tb):
@@ -19,12 +20,13 @@ class ExtensionPoint(object):
         del self._rec, self._roots
     def __call__(self):
         for r in self.roots:
-            h.EMBED(r)
+            hypertext.EMBED(r)
     def clear(self):
         del self.roots[:]
 
 class SimplePage(object):
     EXTENSIONS = ["extra_head", "extra_body", "content", "header", "footer"]
+    
     def __init__(self, title = "Untitled"):
         self.title = title
         self.stylesheets = []
@@ -41,59 +43,73 @@ class SimplePage(object):
         return str(self.render())
 
     def render(self):
-        with h.html as doc:
-            with h.head:
-                h.meta(http_equiv = "Content-Type", content = "text/html; charset=utf-8")
-                h.title(self.title)
+        with hypertext.html as doc:
+            with hypertext.head:
+                hypertext.meta(http_equiv = "Content-Type", content = "text/html; charset=utf-8")
+                hypertext.meta(name = "viewport", content="width=device-width, initial-scale=1.0")
+                hypertext.title(self.title)
                 for href in self.stylesheets:
-                    h.link(rel="stylesheet", href = href, type = "text/css")
+                    hypertext.link(rel="stylesheet", href = href, type = "text/css")
                 for href in self.head_scripts:
-                    h.script(type = "text/javascript", src = href)
+                    hypertext.script(type = "text/javascript", src = href)
                 self.extra_head()
-            with h.body:
-                with h.div.page_wrapper:
-                    with h.div.header:
+            with hypertext.body:
+                with hypertext.div.page_wrapper:
+                    with hypertext.div.header:
                         self.header()
-                    with h.div.content:
+                    with hypertext.div.content:
                         self.content()
-                    with h.div.footer:
+                    with hypertext.div.footer:
                         self.footer()
                     self.extra_body()
                 for href in self.body_scripts:
-                    h.script(type = "text/javascript", src = href)
+                    hypertext.script(type = "text/javascript", src = href)
         return doc
 
 class Component(object):
-    pass
+    REQUIRED_JS = []
+    REQUIRED_CSS = []
+    def __init__(self, eid = None):
+        if not eid:
+            eid = "auto-%d" % (id(self),)
+        self.eid = eid
+    
+    def get_required_js(self):
+        return self.REQUIRED_JS
+    def get_required_css(self):
+        return self.REQUIRED_CSS
 
 jquery_cdn = "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"
-class EditableList(Component):
-    required_js = [jquery_cdn]
-
-
-
-
-if __name__ == "__main__":
-    pg = SimplePage(title = "Angry Birds")
-    pg.add_css("http://cdn.google.com/style.css")
+class Textbox(Component):
+    REQUIRED_JS = [jquery_cdn]
+    REQUIRED_CSS = ["../static/css/bootstrap.min.css"]
     
-    with pg.header:
-        h.h1("Das Heading")
+    def __init__(self, eid = None, placeholder = None):
+        Component.__init__(self, eid = eid)
+        self.placeholder = placeholder
     
-    with pg.content:
-        with h.p:
-            h.TEXT("This is the first paragraph")
-        with h.p:
-            h.TEXT("This is the second paragraph")
-        with h.p:
-            h.TEXT("This is the third paragraph")
-    
-    with pg.footer:
-        h.TEXT("(C) 2013, Tomer Filiba")
+    def render(self):
+        hypertext.input(type = "text", placeholder = self.placeholder, id = self.eid)
 
-    print pg
+_per_thread = threading.local()
 
+class ContainerComponent(Component):
+    def __init__(self):
+        if getattr(_per_thread, "stack", None):
+            _per_thread.stack[-1]._subcomponents.append(self)
+        self._subcomponents = []
+    def __enter__(self):
+        _per_thread.stack.append(self)
+    def __exit__(self):
+        _per_thread.stack.pop(-1)
+    def render(self):
+        for comp in self._subcomponents:
+            comp.render()
 
+class Form(ContainerComponent):
+    def render(self):
+        with hypertext.form:
+            ContainerComponent.render(self)
 
 
 
