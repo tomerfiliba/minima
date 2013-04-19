@@ -1,5 +1,4 @@
-from . import hypertext
-import threading
+from minima import hypertext
 
 
 class ExtensionPoint(object):
@@ -38,6 +37,9 @@ class SimplePage(object):
     def add_css(self, href):
         if href not in self.stylesheets:
             self.stylesheets.append(href)
+    def add_js(self, href):
+        if href not in self.head_scripts:
+            self.head_scripts.append(href)
 
     def __str__(self):
         return str(self.render())
@@ -65,51 +67,6 @@ class SimplePage(object):
                 for href in self.body_scripts:
                     hypertext.script(type = "text/javascript", src = href)
         return doc
-
-class Component(object):
-    REQUIRED_JS = []
-    REQUIRED_CSS = []
-    def __init__(self, eid = None):
-        if not eid:
-            eid = "auto-%d" % (id(self),)
-        self.eid = eid
-    
-    def get_required_js(self):
-        return self.REQUIRED_JS
-    def get_required_css(self):
-        return self.REQUIRED_CSS
-
-jquery_cdn = "//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"
-class Textbox(Component):
-    REQUIRED_JS = [jquery_cdn]
-    REQUIRED_CSS = ["../static/css/bootstrap.min.css"]
-    
-    def __init__(self, eid = None, placeholder = None):
-        Component.__init__(self, eid = eid)
-        self.placeholder = placeholder
-    
-    def render(self):
-        hypertext.input(type = "text", placeholder = self.placeholder, id = self.eid)
-
-_per_thread = threading.local()
-
-class ContainerComponent(Component):
-    def __init__(self):
-        if getattr(_per_thread, "stack", None):
-            _per_thread.stack[-1]._subcomponents.append(self)
-        self._subcomponents = []
-    def __enter__(self):
-        _per_thread.stack.append(self)
-    def __exit__(self):
-        _per_thread.stack.pop(-1)
-    def render(self):
-        for comp in self._subcomponents:
-            comp.render()
-
-class Form(ContainerComponent):
-    def render(self):
-        with hypertext.form:
-            ContainerComponent.render(self)
 
 
 
