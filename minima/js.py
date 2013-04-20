@@ -14,43 +14,66 @@ class JS(object):
         else:
             self._parent = None
     def __enter__(self):
-        print ">>>"
         if not hasattr(_per_thread, "stack"):
             _per_thread.stack = []
         _per_thread.stack.append(self)
         return self
     def __exit__(self, t, v, tb):
-        print "<<<"
-        #_per_thread.stack.pop(-1)
+        _per_thread.stack.pop(-1)
     def __str__(self):
-        return "\n".join(self._render(0))
-    def _render(self, level):
+        return "".join(self._render(0))
+    def _render(self, level, compact = True):
         for stmt in self._stmts:
             if isinstance(stmt, JS):
                 for line in stmt._render(level + 1):
                     yield line
             else:
-                yield ("    " * level) + str(stmt)
-    
-def stmt(text, *args):
+                line = str(stmt)
+                if compact:
+                    #if line == "\n":
+                    #    continue
+                    yield line
+                else:
+                    yield ("    " * level) + line
+
+def stmt(text, *args, **kwargs):
+    end = kwargs.pop("end", ";")
     if args:
         text %= args
-    _per_thread.stack[-1]._stmts.append("%s;" % (text,))
+    if text.strip() and text.strip()[-1] not in ";:{([":
+        text += end
+    stmts = _per_thread.stack[-1]._stmts
+    stmts.append(text)
+    stmts.append("\n")
 
 @contextmanager
 def suite(header, *args, **kwargs):
-    begin = kwargs.pop("opener", " {")
-    end = kwargs.pop("terminator", "}")
+    begin = kwargs.pop("begin", " {")
+    end = kwargs.pop("end", "}")
+    embed = kwargs.pop("embed", False)
     if args:
         header %= args
-    _per_thread.stack[-1]._stmts.append("%s%s" % (header, begin))
+    stmts = _per_thread.stack[-1]._stmts
+    if embed and stmts and stmts[-1] == "\n":
+        stmts.pop(-1)
+    stmts.append("%s%s" % (header, begin))
+    stmts.append("\n")
+    
     with JS() as body:
         yield body
     if end:
-        _per_thread.stack[-1]._stmts.append(end)
+        stmts.append(end)
+    stmts.append("\n")
 
 def function(name, *args):
     return suite("function %s(%s)", name, ", ".join(args))
+
+def var(name, val = NotImplemented):
+    if val is not NotImplemented:
+        return stmt("var %s = %s", name, json.dumps(val))
+    else:
+        return stmt("var %s", name)
+
 
 def if_(cond):
     return suite("if (%s)", cond)
@@ -80,11 +103,10 @@ class JExpr(object):
     def __call__(self, *args):
         self._text += "(%s)" % (", ".join(json.dumps(a) for a in args))
         return self
-    def __enter__(self):
-        self._ctx = suite("(function()", end = "})").__enter__()
-        #return self._ctx
-    def __exit__(self, t, v, tb):
-        return self._ctx.__exit__(t, v, tb)
+    @contextmanager
+    def func(self, *args):
+        with suite("(function(%s)" % (", ".join(args),), end = "});", embed = True):
+            yield self
 
 
 def JQ(selector):
@@ -93,12 +115,12 @@ def JQ(selector):
 #_ = JExpr("_")
 
 with JS() as x:
-    stmt("var x = 5")
-    stmt("var y = 7")
+    var("x", 5)
+    var("y", "hello")
     with function("x", "a", "b"):
-        stmt("var z = 5")
-        with JQ("#foo").click:
-            stmt("var q = 9")
+        var("z", [])
+        with JQ("#foo").click.func("obj"):
+            var("q", {"a":1,"b":2})
         stmt("return a+b+z")
 
 print x
